@@ -12,6 +12,7 @@ class AppState: ObservableObject {
     @Published var currentUser: UserProfile?
     @Published var hasCompletedOnboarding = false
     @Published var selectedTab: TabItem = .player
+    @Published var currentUserProfile: UserProfile? // For compatibility with onboarding
     
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
@@ -65,6 +66,7 @@ class AppState: ObservableObject {
     
     func setCurrentUser(_ user: UserProfile) {
         currentUser = user
+        currentUserProfile = user // Keep both in sync
         saveUserProfile(user)
         
         // Update tab selection based on user role

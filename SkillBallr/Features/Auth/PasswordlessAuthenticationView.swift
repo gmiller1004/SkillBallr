@@ -371,6 +371,7 @@ struct PasswordlessAuthenticationView: View {
 struct AppleSignInButton: View {
     @ObservedObject var authManager: AuthenticationManager
     let isLoading: Bool
+    var onboardingData: OnboardingData? = nil // Optional onboarding data for new users
     
     var body: some View {
         SignInWithAppleButton(
@@ -402,14 +403,14 @@ struct AppleSignInButton: View {
                     return
                 }
                 
-                // Create user profile from Apple ID data
+                // Create user profile from Apple ID data and onboarding data
                 let userProfile = UserProfile(
                     id: appleIDCredential.user, // Apple user ID
                     email: appleIDCredential.email ?? "user@icloud.com",
                     firstName: appleIDCredential.fullName?.givenName ?? "Apple",
                     lastName: appleIDCredential.fullName?.familyName ?? "User",
-                    role: .player, // Default role, can be updated later
-                    position: .qb // Default position, can be updated later
+                    role: onboardingData?.role ?? .player, // Use onboarding role or default
+                    position: onboardingData?.position ?? .qb // Use onboarding position or default
                 )
                 
                 // Set authentication state
