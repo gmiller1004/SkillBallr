@@ -25,14 +25,67 @@ class AuthenticationManager: ObservableObject {
     
     // MARK: - Public Methods
     
-    /// Sign up a new user
-    func signUp(email: String, password: String, firstName: String, lastName: String, role: UserRole, position: PlayerPosition? = nil, age: Int? = nil) async throws {
+    /// Send sign-up verification code to email
+    func sendSignUpCode(email: String) async throws {
         isLoading = true
         errorMessage = nil
         
         do {
-            // TODO: Implement actual Firebase authentication
-            // For now, create a mock user profile
+            // TODO: Send request to SkillBallr.com API to send verification code
+            // For now, simulate network delay
+            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            
+            await MainActor.run {
+                self.isLoading = false
+            }
+            
+            print("✅ Sign-up verification code sent to \(email)")
+            
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to send verification code. Please try again."
+                self.isLoading = false
+            }
+            throw error
+        }
+    }
+    
+    /// Send sign-in verification code to email
+    func sendSignInCode(email: String) async throws {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // TODO: Send request to SkillBallr.com API to send verification code
+            // For now, simulate network delay
+            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            
+            await MainActor.run {
+                self.isLoading = false
+            }
+            
+            print("✅ Sign-in verification code sent to \(email)")
+            
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Failed to send verification code. Please try again."
+                self.isLoading = false
+            }
+            throw error
+        }
+    }
+    
+    /// Verify sign-up code and create account
+    func verifySignUpCode(email: String, code: String, firstName: String, lastName: String, role: UserRole, position: PlayerPosition? = nil, age: Int? = nil) async throws {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // TODO: Send verification request to SkillBallr.com API
+            // For now, simulate network delay
+            try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+            
+            // Create user profile
             let userProfile = UserProfile(
                 email: email,
                 firstName: firstName,
@@ -42,23 +95,54 @@ class AuthenticationManager: ObservableObject {
                 age: age
             )
             
-            // Simulate network delay
-            try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-            
-            // Set authenticated state
             await MainActor.run {
                 self.currentUser = userProfile
                 self.isAuthenticated = true
                 self.isLoading = false
             }
             
-            // TODO: Save to Firebase
-            // TODO: Save to Core Data
-            // TODO: Track analytics event
+            print("✅ Account created successfully for \(email)")
             
         } catch {
             await MainActor.run {
-                self.errorMessage = error.localizedDescription
+                self.errorMessage = "Invalid verification code. Please try again."
+                self.isLoading = false
+            }
+            throw error
+        }
+    }
+    
+    /// Verify sign-in code and authenticate user
+    func verifySignInCode(email: String, code: String) async throws {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // TODO: Send verification request to SkillBallr.com API
+            // For now, simulate network delay
+            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            
+            // TODO: Fetch user profile from API
+            // For now, create a mock user
+            let userProfile = UserProfile(
+                email: email,
+                firstName: "John",
+                lastName: "Doe",
+                role: .player,
+                position: .qb
+            )
+            
+            await MainActor.run {
+                self.currentUser = userProfile
+                self.isAuthenticated = true
+                self.isLoading = false
+            }
+            
+            print("✅ Sign-in successful for \(email)")
+            
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Invalid verification code. Please try again."
                 self.isLoading = false
             }
             throw error
