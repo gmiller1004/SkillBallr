@@ -99,7 +99,7 @@ class AuthenticationManager: ObservableObject {
                 email: email,
                 code: code,
                 role: role.rawValue.lowercased(),
-                position: position?.rawValue,
+                position: position?.rawValue ?? "", // Provide empty string instead of nil for coaches
                 firstName: firstName,
                 lastName: lastName
             )
@@ -150,7 +150,14 @@ class AuthenticationManager: ObservableObject {
         errorMessage = nil
         
         do {
-            let request = EmailAuthRequest(email: email, code: code)
+            let request = EmailAuthRequest(
+                email: email, 
+                code: code,
+                role: nil,
+                position: "", // Provide empty string for sign-in
+                firstName: nil,
+                lastName: nil
+            )
             
             let encoder = JSONEncoder()
             let requestData = try encoder.encode(request)
