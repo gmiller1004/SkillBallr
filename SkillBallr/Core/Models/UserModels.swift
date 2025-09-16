@@ -59,71 +59,7 @@ enum PlayerPosition: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// Subscription tier enumeration
-enum SubscriptionTier: String, CaseIterable, Identifiable, Codable {
-    case free = "free"
-    case playerPremium = "player_premium"
-    case coachPro = "coach_pro"
-    case familyUnlimited = "family_unlimited"
-    
-    var id: String { self.rawValue }
-    
-    var displayName: String {
-        switch self {
-        case .free: return "Free"
-        case .playerPremium: return "Player Premium"
-        case .coachPro: return "Coach Pro"
-        case .familyUnlimited: return "Family Unlimited"
-        }
-    }
-    
-    var price: String {
-        switch self {
-        case .free: return "Free"
-        case .playerPremium: return "$4.99/month"
-        case .coachPro: return "$9.99/month"
-        case .familyUnlimited: return "$14.99/month"
-        }
-    }
-    
-    var features: [Feature] {
-        switch self {
-        case .free:
-            return [
-                .basicEducation,
-                .limitedQuizzes,
-                .basicPlaybookViewer
-            ]
-        case .playerPremium:
-            return [
-                .allPositions,
-                .unlimitedQuizzes,
-                .progressBadges,
-                .arPlaybookViewer,
-                .selfReviewUpload,
-                .advancedAnimations
-            ]
-        case .coachPro:
-            return [
-                .playbookUpload,
-                .aiAnalysis,
-                .teamManagement,
-                .teamInvites,
-                .dashboardAnalytics,
-                .playExport
-            ]
-        case .familyUnlimited:
-            return [
-                .allFeatures,
-                .multiTeamSupport,
-                .familyAccounts,
-                .positionDepthCharts,
-                .historicalTracking,
-                .prioritySupport
-            ]
-        }
-    }
-}
+// SubscriptionTier enum is now defined in SubscriptionManager.swift
 
 /// Feature enumeration for subscription tiers
 enum Feature: String, CaseIterable, Identifiable, Codable {

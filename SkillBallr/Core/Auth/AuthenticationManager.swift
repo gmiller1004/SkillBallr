@@ -1,5 +1,7 @@
 import Foundation
 import Combine
+import AuthenticationServices
+import CryptoKit
 import SwiftUI
 
 /// Authentication manager for handling user authentication
@@ -106,28 +108,57 @@ class AuthenticationManager: ObservableObject {
         errorMessage = nil
         
         do {
-            // TODO: Implement Apple Sign In
-            // For now, simulate successful login
+            // Generate nonce for security
+            let nonce = randomNonceString()
+            let hashedNonce = sha256(nonce)
             
-            try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+            // Create Apple ID request
+            let appleIDProvider = ASAuthorizationAppleIDProvider()
+            let request = appleIDProvider.createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = hashedNonce
             
-            let mockUser = UserProfile(
-                email: "user@icloud.com",
-                firstName: "Apple",
-                lastName: "User",
-                role: .player,
-                position: .wr
+            // Create authorization controller
+            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+            
+            // Handle the authorization result
+            let result = try await withCheckedThrowingContinuation { continuation in
+                let delegate = AppleSignInDelegate(continuation: continuation)
+                authorizationController.delegate = delegate
+                authorizationController.presentationContextProvider = delegate
+                authorizationController.performRequests()
+            }
+            
+            // Process the Apple ID credential
+            let credential = result.credential as! ASAuthorizationAppleIDCredential
+            
+            // Create user profile from Apple ID data
+            let userProfile = UserProfile(
+                id: credential.user, // Apple user ID
+                email: credential.email ?? "user@icloud.com",
+                firstName: credential.fullName?.givenName ?? "Apple",
+                lastName: credential.fullName?.familyName ?? "User",
+                role: .player, // Default role, can be updated later
+                position: .qb // Default position, can be updated later
             )
             
             await MainActor.run {
-                self.currentUser = mockUser
+                self.currentUser = userProfile
                 self.isAuthenticated = true
                 self.isLoading = false
             }
             
+            // TODO: Save user profile to backend and local storage
+            
+            // TODO: Send Apple ID data to your backend for user creation/authentication
+            // You'll need to send the credential.user (Apple user ID) and credential.identityToken
+            // to your backend to create a JWT token
+            
+            print("✅ Apple Sign In successful for user: \(credential.user)")
+            
         } catch {
             await MainActor.run {
-                self.errorMessage = error.localizedDescription
+                self.errorMessage = "Apple Sign In failed: \(error.localizedDescription)"
                 self.isLoading = false
             }
             throw error
@@ -277,5 +308,78 @@ extension AuthenticationManager {
                 return "Too many attempts. Please try again later."
             }
         }
+    }
+}
+
+// MARK: - Apple Sign In Helper Methods
+extension AuthenticationManager {
+    
+    /// Generate a random nonce string for Apple Sign In security
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remainingLength = length
+        
+        while remainingLength > 0 {
+            let randoms: [UInt8] = (0 ..< 16).map { _ in
+                var random: UInt8 = 0
+                let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+                if errorCode != errSecSuccess {
+                    fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+                }
+                return random
+            }
+            
+            randoms.forEach { random in
+                if remainingLength == 0 {
+                    return
+                }
+                
+                if random < charset.count {
+                    result.append(charset[Int(random)])
+                    remainingLength -= 1
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    /// Hash a nonce string using SHA256
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+        let hashString = hashedData.compactMap {
+            return String(format: "%02x", $0)
+        }.joined()
+        
+        return hashString
+    }
+}
+
+// MARK: - Apple Sign In Delegate
+class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+    
+    private let continuation: CheckedContinuation<ASAuthorization, Error>
+    
+    init(continuation: CheckedContinuation<ASAuthorization, Error>) {
+        self.continuation = continuation
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        continuation.resume(returning: authorization)
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        continuation.resume(throwing: error)
+    }
+    
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            fatalError("No window available for Apple Sign In presentation")
+        }
+        return window
     }
 }
