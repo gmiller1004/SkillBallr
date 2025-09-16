@@ -92,7 +92,7 @@ struct PasswordlessAuthenticationView: View {
         VStack(spacing: 24) {
             // Apple Sign In Button (Primary)
             AppleSignInButton(
-                onTap: handleAppleSignIn,
+                authManager: authManager,
                 isLoading: authManager.isLoading
             )
             
@@ -303,13 +303,8 @@ struct PasswordlessAuthenticationView: View {
     // MARK: - Actions
     
     private func handleAppleSignIn() {
-        Task {
-            do {
-                try await authManager.signInWithApple()
-            } catch {
-                print("Apple Sign In failed: \(error)")
-            }
-        }
+        // This method is no longer used since AppleSignInButton handles the flow directly
+        print("Apple Sign In initiated through button")
     }
     
     private func handleEmailAuthentication() {
@@ -374,17 +369,17 @@ struct PasswordlessAuthenticationView: View {
 // MARK: - Apple Sign In Button Component
 
 struct AppleSignInButton: View {
-    let onTap: () -> Void
+    @ObservedObject var authManager: AuthenticationManager
     let isLoading: Bool
     
     var body: some View {
         SignInWithAppleButton(
             onRequest: { request in
                 request.requestedScopes = [.fullName, .email]
+                print("🍎 Apple Sign In button tapped")
             },
             onCompletion: { result in
-                // Handle the result in the parent view
-                onTap()
+                handleAppleSignInResult(result)
             }
         )
         .signInWithAppleButtonStyle(.black) // Use black style for dark background
@@ -392,6 +387,75 @@ struct AppleSignInButton: View {
         .cornerRadius(UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16) // iPad-optimized corner radius
         .disabled(isLoading)
         .opacity(isLoading ? 0.6 : 1.0)
+    }
+    
+    private func handleAppleSignInResult(_ result: Result<ASAuthorization, Error>) {
+        Task { @MainActor in
+            switch result {
+            case .success(let authorization):
+                print("🍎 Apple Sign In successful")
+                
+                // Process the Apple ID credential
+                guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                    print("❌ Failed to get Apple ID credential")
+                    authManager.errorMessage = "Failed to get Apple ID credential"
+                    return
+                }
+                
+                // Create user profile from Apple ID data
+                let userProfile = UserProfile(
+                    id: appleIDCredential.user, // Apple user ID
+                    email: appleIDCredential.email ?? "user@icloud.com",
+                    firstName: appleIDCredential.fullName?.givenName ?? "Apple",
+                    lastName: appleIDCredential.fullName?.familyName ?? "User",
+                    role: .player, // Default role, can be updated later
+                    position: .qb // Default position, can be updated later
+                )
+                
+                // Set authentication state
+                authManager.currentUser = userProfile
+                authManager.isAuthenticated = true
+                authManager.isLoading = false
+                authManager.errorMessage = nil
+                
+                print("✅ Apple Sign In completed successfully for user: \(appleIDCredential.user)")
+                
+            case .failure(let error):
+                print("❌ Apple Sign In failed: \(error)")
+                
+                // Handle specific Apple Sign In errors
+                let userFriendlyMessage: String
+                if let authError = error as? ASAuthorizationError {
+                    switch authError.code {
+                    case .canceled:
+                        userFriendlyMessage = "Apple Sign In was canceled. Please try again if you'd like to continue."
+                    case .failed:
+                        userFriendlyMessage = "Apple Sign In failed. Please check your internet connection and try again."
+                    case .invalidResponse:
+                        userFriendlyMessage = "Invalid response from Apple. Please try again."
+                    case .notHandled:
+                        userFriendlyMessage = "Apple Sign In is not available. Please use email sign-in instead."
+                    case .unknown:
+                        userFriendlyMessage = "An unknown error occurred with Apple Sign In. Please try again."
+                    case .notInteractive:
+                        userFriendlyMessage = "Apple Sign In is not available in this context. Please use email sign-in instead."
+                    case .matchedExcludedCredential:
+                        userFriendlyMessage = "Apple Sign In credential is excluded. Please use email sign-in instead."
+                    case .credentialImport:
+                        userFriendlyMessage = "Apple Sign In credential import failed. Please try again or use email sign-in."
+                    case .credentialExport:
+                        userFriendlyMessage = "Apple Sign In credential export failed. Please try again or use email sign-in."
+                    @unknown default:
+                        userFriendlyMessage = "Apple Sign In failed. Please try again or use email sign-in."
+                    }
+                } else {
+                    userFriendlyMessage = "Apple Sign In failed. Please try again or use email sign-in."
+                }
+                
+                authManager.errorMessage = userFriendlyMessage
+                authManager.isLoading = false
+            }
+        }
     }
 }
 
