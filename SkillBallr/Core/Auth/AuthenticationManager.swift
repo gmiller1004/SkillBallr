@@ -244,6 +244,8 @@ class AuthenticationManager: ObservableObject {
             request.requestedScopes = [.fullName, .email]
             request.nonce = hashedNonce
             
+            print("🍎 Starting Apple Sign In request...")
+            
             // Create authorization controller
             let authorizationController = ASAuthorizationController(authorizationRequests: [request])
             
@@ -291,11 +293,52 @@ class AuthenticationManager: ObservableObject {
             // Clean up the delegate in case of error
             self.appleSignInDelegate = nil
             
+            // Handle specific Apple Sign In errors
+            let userFriendlyMessage: String
+            if let authError = error as? ASAuthorizationError {
+                switch authError.code {
+                case .canceled:
+                    userFriendlyMessage = "Apple Sign In was canceled. Please try again if you'd like to continue."
+                case .failed:
+                    userFriendlyMessage = "Apple Sign In failed. Please check your internet connection and try again."
+                case .invalidResponse:
+                    userFriendlyMessage = "Invalid response from Apple. Please try again."
+                case .notHandled:
+                    userFriendlyMessage = "Apple Sign In is not available. Please use email sign-in instead."
+                case .unknown:
+                    userFriendlyMessage = "An unknown error occurred with Apple Sign In. Please try again."
+                case .notInteractive:
+                    userFriendlyMessage = "Apple Sign In is not available in this context. Please use email sign-in instead."
+                case .matchedExcludedCredential:
+                    userFriendlyMessage = "Apple Sign In credential is excluded. Please use email sign-in instead."
+                case .credentialImport:
+                    userFriendlyMessage = "Apple Sign In credential import failed. Please try again or use email sign-in."
+                case .credentialExport:
+                    userFriendlyMessage = "Apple Sign In credential export failed. Please try again or use email sign-in."
+                @unknown default:
+                    userFriendlyMessage = "Apple Sign In failed. Please try again or use email sign-in."
+                }
+            } else {
+                // Handle timeout or other errors
+                if error.localizedDescription.contains("timed out") {
+                    userFriendlyMessage = "Apple Sign In timed out. Please try again."
+                } else {
+                    userFriendlyMessage = "Apple Sign In failed. Please try again or use email sign-in."
+                }
+            }
+            
             await MainActor.run {
-                self.errorMessage = "Apple Sign In failed: \(error.localizedDescription)"
+                self.errorMessage = userFriendlyMessage
                 self.isLoading = false
             }
-            throw error
+            
+            // Don't throw the error for user cancellation - just log it
+            if let authError = error as? ASAuthorizationError, authError.code == .canceled {
+                print("ℹ️ Apple Sign In canceled by user")
+            } else {
+                print("❌ Apple Sign In error: \(error)")
+                throw error
+            }
         }
     }
     
@@ -526,10 +569,15 @@ class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthor
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        print("🍎 Apple Sign In authorization completed successfully")
         continuation.resume(returning: authorization)
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("🍎 Apple Sign In authorization failed with error: \(error)")
+        if let authError = error as? ASAuthorizationError {
+            print("🍎 Apple Sign In error code: \(authError.code.rawValue)")
+        }
         continuation.resume(throwing: error)
     }
     
