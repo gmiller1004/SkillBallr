@@ -17,6 +17,7 @@ class AuthenticationManager: ObservableObject {
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
     private let networkManager = NetworkManager()
+    private var appleSignInDelegate: AppleSignInDelegate? // Keep delegate alive during Apple Sign In
     
     // MARK: - Initialization
     init() {
@@ -246,13 +247,18 @@ class AuthenticationManager: ObservableObject {
             // Create authorization controller
             let authorizationController = ASAuthorizationController(authorizationRequests: [request])
             
-            // Handle the authorization result
-            let result = try await withCheckedThrowingContinuation { continuation in
-                let delegate = AppleSignInDelegate(continuation: continuation)
-                authorizationController.delegate = delegate
-                authorizationController.presentationContextProvider = delegate
-                authorizationController.performRequests()
+            // Handle the authorization result with timeout
+            let result = try await withTaskTimeout(seconds: 30) {
+                try await withCheckedThrowingContinuation { continuation in
+                    self.appleSignInDelegate = AppleSignInDelegate(continuation: continuation)
+                    authorizationController.delegate = self.appleSignInDelegate
+                    authorizationController.presentationContextProvider = self.appleSignInDelegate
+                    authorizationController.performRequests()
+                }
             }
+            
+            // Clean up the delegate
+            self.appleSignInDelegate = nil
             
             // Process the Apple ID credential
             let credential = result.credential as! ASAuthorizationAppleIDCredential
@@ -282,6 +288,9 @@ class AuthenticationManager: ObservableObject {
             print("✅ Apple Sign In successful for user: \(credential.user)")
             
         } catch {
+            // Clean up the delegate in case of error
+            self.appleSignInDelegate = nil
+            
             await MainActor.run {
                 self.errorMessage = "Apple Sign In failed: \(error.localizedDescription)"
                 self.isLoading = false
@@ -483,6 +492,27 @@ extension AuthenticationManager {
         }.joined()
         
         return hashString
+    }
+    
+    /// Helper function to add timeout to async operations
+    private func withTaskTimeout<T>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw NSError(domain: "TimeoutError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Operation timed out"])
+            }
+            
+            guard let result = try await group.next() else {
+                throw NSError(domain: "TimeoutError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Operation timed out"])
+            }
+            
+            group.cancelAll()
+            return result
+        }
     }
 }
 
