@@ -16,6 +16,7 @@ class AuthenticationManager: ObservableObject {
     
     // MARK: - Private Properties
     private var cancellables = Set<AnyCancellable>()
+    private let networkManager = NetworkManager()
     
     // MARK: - Initialization
     init() {
@@ -31,15 +32,21 @@ class AuthenticationManager: ObservableObject {
         errorMessage = nil
         
         do {
-            // TODO: Send request to SkillBallr.com API to send verification code
-            // For now, simulate network delay
-            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            let request = SendVerificationRequest(email: email)
+            let encoder = JSONEncoder()
+            let requestData = try encoder.encode(request)
+            let response: SendVerificationResponse = try await networkManager.request(
+                endpoint: .sendVerification,
+                responseType: SendVerificationResponse.self,
+                method: .POST,
+                body: requestData
+            )
             
             await MainActor.run {
                 self.isLoading = false
             }
             
-            print("✅ Sign-up verification code sent to \(email)")
+            print("✅ Verification code sent to \(email). Expires in \(response.expiresIn) seconds")
             
         } catch {
             await MainActor.run {
@@ -56,15 +63,21 @@ class AuthenticationManager: ObservableObject {
         errorMessage = nil
         
         do {
-            // TODO: Send request to SkillBallr.com API to send verification code
-            // For now, simulate network delay
-            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            let request = SendVerificationRequest(email: email)
+            let encoder = JSONEncoder()
+            let requestData = try encoder.encode(request)
+            let response: SendVerificationResponse = try await networkManager.request(
+                endpoint: .sendVerification,
+                responseType: SendVerificationResponse.self,
+                method: .POST,
+                body: requestData
+            )
             
             await MainActor.run {
                 self.isLoading = false
             }
             
-            print("✅ Sign-in verification code sent to \(email)")
+            print("✅ Sign-in verification code sent to \(email). Expires in \(response.expiresIn) seconds")
             
         } catch {
             await MainActor.run {
@@ -81,17 +94,35 @@ class AuthenticationManager: ObservableObject {
         errorMessage = nil
         
         do {
-            // TODO: Send verification request to SkillBallr.com API
-            // For now, simulate network delay
-            try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-            
-            // Create user profile
-            let userProfile = UserProfile(
+            let request = EmailAuthRequest(
                 email: email,
+                code: code,
+                role: role.rawValue.lowercased(),
+                position: position?.rawValue,
                 firstName: firstName,
-                lastName: lastName,
-                role: role,
-                position: position,
+                lastName: lastName
+            )
+            
+            let encoder = JSONEncoder()
+            let requestData = try encoder.encode(request)
+            let response: EmailAuthResponse = try await networkManager.request(
+                endpoint: .emailSignup,
+                responseType: EmailAuthResponse.self,
+                method: .POST,
+                body: requestData
+            )
+            
+            // Store JWT token
+            networkManager.setJWTToken(response.token)
+            
+            // Convert API user to local UserProfile
+            let userProfile = UserProfile(
+                id: response.user.id,
+                email: response.user.email,
+                firstName: response.user.firstName,
+                lastName: response.user.lastName,
+                role: UserRole(rawValue: response.user.role.capitalized) ?? role,
+                position: response.user.position.flatMap { PlayerPosition(rawValue: $0) },
                 age: age
             )
             
@@ -101,7 +132,7 @@ class AuthenticationManager: ObservableObject {
                 self.isLoading = false
             }
             
-            print("✅ Account created successfully for \(email)")
+            print("✅ Account created successfully for \(email). New user: \(response.isLogin ? "No" : "Yes")")
             
         } catch {
             await MainActor.run {
@@ -118,18 +149,28 @@ class AuthenticationManager: ObservableObject {
         errorMessage = nil
         
         do {
-            // TODO: Send verification request to SkillBallr.com API
-            // For now, simulate network delay
-            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            let request = EmailAuthRequest(email: email, code: code)
             
-            // TODO: Fetch user profile from API
-            // For now, create a mock user
+            let encoder = JSONEncoder()
+            let requestData = try encoder.encode(request)
+            let response: EmailAuthResponse = try await networkManager.request(
+                endpoint: .emailSignup, // Same endpoint handles both signup and signin
+                responseType: EmailAuthResponse.self,
+                method: .POST,
+                body: requestData
+            )
+            
+            // Store JWT token
+            networkManager.setJWTToken(response.token)
+            
+            // Convert API user to local UserProfile
             let userProfile = UserProfile(
-                email: email,
-                firstName: "John",
-                lastName: "Doe",
-                role: .player,
-                position: .qb
+                id: response.user.id,
+                email: response.user.email,
+                firstName: response.user.firstName,
+                lastName: response.user.lastName,
+                role: UserRole(rawValue: response.user.role.capitalized) ?? .player,
+                position: response.user.position.flatMap { PlayerPosition(rawValue: $0) }
             )
             
             await MainActor.run {
@@ -138,7 +179,7 @@ class AuthenticationManager: ObservableObject {
                 self.isLoading = false
             }
             
-            print("✅ Sign-in successful for \(email)")
+            print("✅ Sign-in successful for \(email). Existing user: \(response.isLogin ? "Yes" : "No")")
             
         } catch {
             await MainActor.run {
@@ -253,9 +294,12 @@ class AuthenticationManager: ObservableObject {
     func signOut() async {
         isLoading = true
         
+        // Clear JWT token from network manager
+        networkManager.clearJWTToken()
+        
+        // TODO: Call logout endpoint if needed
         // TODO: Sign out from Firebase
         // TODO: Clear Core Data cache
-        // TODO: Clear user defaults
         
         // Simulate sign out delay
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds

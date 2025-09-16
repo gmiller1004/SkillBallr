@@ -7,6 +7,10 @@ enum APIEndpoint {
     case login
     case logout
     case forgotPassword
+    case sendVerification
+    case verifyCode
+    case emailSignup
+    case appleSignIn
     
     // MARK: - User Management
     case getUser(userId: String)
@@ -62,6 +66,14 @@ enum APIEndpoint {
             return "/api/auth/logout"
         case .forgotPassword:
             return "/api/auth/forgot-password"
+        case .sendVerification:
+            return "/api/auth/send-verification"
+        case .verifyCode:
+            return "/api/auth/verify-code"
+        case .emailSignup:
+            return "/api/auth/email-signup"
+        case .appleSignIn:
+            return "/api/auth/apple-signin"
             
         // User Management
         case .getUser(let userId):
@@ -138,7 +150,7 @@ enum APIEndpoint {
     
     var requiresAuth: Bool {
         switch self {
-        case .register, .login, .forgotPassword, .submitContact, .getHealth:
+        case .register, .login, .forgotPassword, .sendVerification, .verifyCode, .emailSignup, .appleSignIn, .submitContact, .getHealth:
             return false
         default:
             return true
@@ -147,7 +159,7 @@ enum APIEndpoint {
     
     var httpMethod: HTTPMethod {
         switch self {
-        case .register, .login, .createTeam, .createPlay, .analyzePlay, .createProgressEntry, .submitContact, .uploadPlayDiagram, .uploadUserAvatar:
+        case .register, .login, .sendVerification, .verifyCode, .emailSignup, .appleSignIn, .createTeam, .createPlay, .analyzePlay, .createProgressEntry, .submitContact, .uploadPlayDiagram, .uploadUserAvatar:
             return .POST
         case .updateUser, .updateTeam, .updatePlay, .updateProgressEntry:
             return .PUT
