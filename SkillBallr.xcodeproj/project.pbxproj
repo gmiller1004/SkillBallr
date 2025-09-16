@@ -9,8 +9,7 @@
 /* Begin PBXBuildFile section */
 		5B632AF82E79F9E600C625E5 /* SkillBallr Logo Medium.png in Resources */ = {isa = PBXBuildFile; fileRef = 5B632AF72E79F9E600C625E5 /* SkillBallr Logo Medium.png */; };
 		5B632B322E7A0F0800C625E5 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B632B312E7A0F0700C625E5 /* StoreKit.framework */; };
-		5B632B342E7A0F3500C625E5 /* AuthenticationServices.framework in Resources */ = {isa = PBXBuildFile; fileRef = 5B632B332E7A0F1F00C625E5 /* AuthenticationServices.framework */; };
-		5B632B362E7A0F4B00C625E5 /* Storekit.framework in Resources */ = {isa = PBXBuildFile; fileRef = 5B632B352E7A0F4300C625E5 /* Storekit.framework */; };
+		5B632B342E7A0F3500C625E5 /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B632B332E7A0F1F00C625E5 /* AuthenticationServices.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,8 +35,7 @@
 		5B632AE12E79F6FC00C625E5 /* SkillBallrUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkillBallrUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B632AF72E79F9E600C625E5 /* SkillBallr Logo Medium.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "SkillBallr Logo Medium.png"; sourceTree = "<group>"; };
 		5B632B312E7A0F0700C625E5 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
-		5B632B332E7A0F1F00C625E5 /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = text; path = AuthenticationServices.framework; sourceTree = "<group>"; };
-		5B632B352E7A0F4300C625E5 /* Storekit.framework */ = {isa = PBXFileReference; lastKnownFileType = text; path = Storekit.framework; sourceTree = "<group>"; };
+		5B632B332E7A0F1F00C625E5 /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AuthenticationServices.framework; path = System/Library/Frameworks/AuthenticationServices.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -77,6 +75,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5B632B322E7A0F0800C625E5 /* StoreKit.framework in Frameworks */,
+				5B632B342E7A0F3500C625E5 /* AuthenticationServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,8 +99,8 @@
 		5B632ABA2E79F6FA00C625E5 = {
 			isa = PBXGroup;
 			children = (
-				5B632B352E7A0F4300C625E5 /* Storekit.framework */,
 				5B632B332E7A0F1F00C625E5 /* AuthenticationServices.framework */,
+				5B632B312E7A0F0700C625E5 /* StoreKit.framework */,
 				5B632AF72E79F9E600C625E5 /* SkillBallr Logo Medium.png */,
 				5B632AC52E79F6FA00C625E5 /* SkillBallr */,
 				5B632ADA2E79F6FC00C625E5 /* SkillBallrTests */,
@@ -249,9 +248,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5B632B342E7A0F3500C625E5 /* AuthenticationServices.framework in Resources */,
 				5B632AF82E79F9E600C625E5 /* SkillBallr Logo Medium.png in Resources */,
-				5B632B362E7A0F4B00C625E5 /* Storekit.framework in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
