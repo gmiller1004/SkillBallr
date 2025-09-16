@@ -23,13 +23,15 @@ struct SkillBallrButton: View {
         case medium
         case large
         case extraLarge
+        case kidFriendly // New iPad-optimized size for young users
         
         var height: CGFloat {
             switch self {
-            case .small: return 40
-            case .medium: return 48
-            case .large: return 56
-            case .extraLarge: return 64
+            case .small: return 44 // Minimum touch target
+            case .medium: return 52
+            case .large: return 64 // iPad-optimized
+            case .extraLarge: return 72
+            case .kidFriendly: return 80 // Extra large for younger kids
             }
         }
         
@@ -39,6 +41,15 @@ struct SkillBallrButton: View {
             case .medium: return SkillBallrTypography.bodyMedium
             case .large: return SkillBallrTypography.button
             case .extraLarge: return SkillBallrTypography.buttonLarge
+            case .kidFriendly: return .system(size: 22, weight: .semibold) // Larger font for kids
+            }
+        }
+        
+        var cornerRadius: CGFloat {
+            switch self {
+            case .small, .medium: return 12
+            case .large, .extraLarge: return 16
+            case .kidFriendly: return 20 // More rounded for kid-friendly feel
             }
         }
     }
@@ -52,10 +63,10 @@ struct SkillBallrButton: View {
                 .frame(height: size.height)
                 .background(backgroundColor)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: size.cornerRadius)
                         .stroke(borderColor, lineWidth: borderWidth)
                 )
-                .cornerRadius(12)
+                .cornerRadius(size.cornerRadius)
         }
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.6 : 1.0)
@@ -101,17 +112,20 @@ struct SkillBallrButton: View {
 // MARK: - Card Components
 struct SkillBallrCard<Content: View>: View {
     let content: Content
-    var padding: CGFloat = 20
-    var cornerRadius: CGFloat = 16
+    var padding: CGFloat = 24 // Increased for iPad
+    var cornerRadius: CGFloat = 20 // More rounded for iPad
+    var maxWidth: CGFloat = 600 // Constrain width on iPad for better readability
     
-    init(padding: CGFloat = 20, cornerRadius: CGFloat = 16, @ViewBuilder content: () -> Content) {
+    init(padding: CGFloat = 24, cornerRadius: CGFloat = 20, maxWidth: CGFloat = 600, @ViewBuilder content: () -> Content) {
         self.padding = padding
         self.cornerRadius = cornerRadius
+        self.maxWidth = maxWidth
         self.content = content()
     }
     
     var body: some View {
         content
+            .frame(maxWidth: maxWidth) // Constrain width on iPad
             .padding(padding)
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
@@ -137,7 +151,7 @@ struct SkillBallrTextField: View {
     var isSecure: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) { // Increased spacing for iPad
             Text(title)
                 .font(.skillBallr(.label))
                 .foregroundColor(.white)
@@ -158,14 +172,14 @@ struct SkillBallrTextField: View {
 struct SkillBallrTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
-            .padding(16)
-            .font(.skillBallr(.textField))
+            .padding(20) // Increased padding for iPad
+            .font(.system(size: 18, weight: .regular)) // Larger font for iPad
             .foregroundColor(.white)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 16) // More rounded for iPad
                     .fill(SkillBallrColors.overlayBackground)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.white.opacity(0.2), lineWidth: 1)
                     )
             )

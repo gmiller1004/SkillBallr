@@ -99,7 +99,7 @@ struct AuthenticationView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 
                 // Form fields
-                VStack(spacing: 16) {
+                VStack(spacing: 20) { // Increased spacing for iPad
                     if isSignUpMode {
                         SkillBallrTextField(
                             title: "First Name",
@@ -114,7 +114,7 @@ struct AuthenticationView: View {
                         )
                         
                         // Role selection
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 16) { // Increased spacing for iPad
                             Text("I am a...")
                                 .font(.skillBallr(.label))
                                 .foregroundColor(.white)
@@ -129,12 +129,12 @@ struct AuthenticationView: View {
                         
                         // Position selection (for players)
                         if selectedRole == .player {
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 16) { // Increased spacing for iPad
                                 Text("Position")
                                     .font(.skillBallr(.label))
                                     .foregroundColor(.white)
                                 
-                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2), spacing: 12) { // 3 columns on iPad
                                     ForEach(PlayerPosition.allCases) { position in
                                         Button(action: { selectedPosition = position }) {
                                             VStack(spacing: 4) {
@@ -145,7 +145,7 @@ struct AuthenticationView: View {
                                                     .foregroundColor(selectedPosition == position ? .white : SkillBallrColors.skillOrange)
                                             }
                                             .frame(maxWidth: .infinity)
-                                            .frame(height: 60)
+                                            .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 80 : 60) // Taller on iPad
                                             .background(
                                                 RoundedRectangle(cornerRadius: 8)
                                                     .fill(selectedPosition == position ? SkillBallrColors.skillOrange : SkillBallrColors.overlayBackground)
@@ -189,10 +189,11 @@ struct AuthenticationView: View {
                 }
                 
                 // Action buttons
-                VStack(spacing: 12) {
+                VStack(spacing: 16) { // Increased spacing for iPad
                     SkillBallrButton(
                         title: isSignUpMode ? "Create Account" : "Sign In",
                         action: handleAuthentication,
+                        size: .kidFriendly, // Use kid-friendly size
                         isDisabled: !isFormValid || authManager.isLoading
                     )
                     
@@ -201,6 +202,7 @@ struct AuthenticationView: View {
                             title: "Sign in with Apple",
                             action: handleAppleSignIn,
                             style: .outline,
+                            size: .large, // Large but not kid-friendly for secondary action
                             isDisabled: authManager.isLoading
                         )
                     }

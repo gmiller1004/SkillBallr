@@ -4,32 +4,32 @@ import SwiftUI
 /// Optimized for youth-friendly readability and coach dashboard clarity
 struct SkillBallrTypography {
     
-    // MARK: - Display Styles
-    /// Large title for hero sections (32pt, bold)
-    static let largeTitle = Font.system(size: 32, weight: .bold, design: .default)
+    // MARK: - Display Styles (iPad-Optimized)
+    /// Large title for hero sections (40pt on iPad, 32pt on iPhone)
+    static let largeTitle = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 40 : 32, weight: .bold, design: .default)
     
-    /// Extra large title for main headings (28pt, semibold)
-    static let extraLargeTitle = Font.system(size: 28, weight: .semibold, design: .default)
+    /// Extra large title for main headings (36pt on iPad, 28pt on iPhone)
+    static let extraLargeTitle = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 36 : 28, weight: .semibold, design: .default)
     
-    // MARK: - Heading Styles
-    /// Main headline (24pt, semibold)
-    static let headline = Font.system(size: 24, weight: .semibold, design: .default)
+    // MARK: - Heading Styles (iPad-Optimized)
+    /// Main headline (28pt on iPad, 24pt on iPhone)
+    static let headline = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 28 : 24, weight: .semibold, design: .default)
     
-    /// Section title (20pt, semibold)
-    static let sectionTitle = Font.system(size: 20, weight: .semibold, design: .default)
+    /// Section title (24pt on iPad, 20pt on iPhone)
+    static let sectionTitle = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 24 : 20, weight: .semibold, design: .default)
     
-    /// Card title (18pt, semibold)
-    static let cardTitle = Font.system(size: 18, weight: .semibold, design: .default)
+    /// Card title (22pt on iPad, 18pt on iPhone)
+    static let cardTitle = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 22 : 18, weight: .semibold, design: .default)
     
-    // MARK: - Body Text Styles
-    /// Primary body text (16pt, regular)
-    static let body = Font.system(size: 16, weight: .regular, design: .default)
+    // MARK: - Body Text Styles (iPad-Optimized)
+    /// Primary body text (20pt on iPad, 16pt on iPhone)
+    static let body = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16, weight: .regular, design: .default)
     
-    /// Body text with medium weight (16pt, medium)
-    static let bodyMedium = Font.system(size: 16, weight: .medium, design: .default)
+    /// Body text with medium weight (20pt on iPad, 16pt on iPhone)
+    static let bodyMedium = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16, weight: .medium, design: .default)
     
-    /// Secondary body text (14pt, regular)
-    static let bodySecondary = Font.system(size: 14, weight: .regular, design: .default)
+    /// Secondary body text (18pt on iPad, 14pt on iPhone)
+    static let bodySecondary = Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 18 : 14, weight: .regular, design: .default)
     
     // MARK: - Interactive Elements
     /// Button text (18pt, semibold)

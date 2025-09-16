@@ -92,12 +92,12 @@ struct OnboardingView: View {
     }
     
     private var roleSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 24) { // Increased spacing for iPad
             Text("Choose Your Role")
                 .font(.skillBallr(.headline))
                 .foregroundColor(.white)
             
-            VStack(spacing: 12) {
+            VStack(spacing: 16) { // Increased spacing for iPad
                 ForEach(UserRole.allCases) { role in
                     RoleSelectionCard(
                         role: role,
@@ -115,12 +115,12 @@ struct OnboardingView: View {
     }
     
     private var positionSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 24) { // Increased spacing for iPad
             Text("Select Your Position")
                 .font(.skillBallr(.headline))
                 .foregroundColor(.white)
             
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: UIDevice.current.userInterfaceIdiom == .pad ? 3 : 2), spacing: 16) { // 3 columns on iPad, 2 on iPhone
                 ForEach(PlayerPosition.allCases) { position in
                     PositionSelectionCard(
                         position: position,
@@ -134,12 +134,12 @@ struct OnboardingView: View {
     }
     
     private var personalInformationSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 24) { // Increased spacing for iPad
             Text("Personal Information")
                 .font(.skillBallr(.headline))
                 .foregroundColor(.white)
             
-            VStack(spacing: 16) {
+            VStack(spacing: 20) { // Increased spacing for iPad
                 SkillBallrTextField(
                     title: "First Name",
                     text: $firstName,
@@ -175,9 +175,10 @@ struct OnboardingView: View {
         SkillBallrButton(
             title: "Start for free",
             action: handleNextButton,
+            size: .kidFriendly, // Use kid-friendly size for better iPad experience
             isDisabled: !isFormValid
         )
-        .padding(.top, 16)
+        .padding(.top, 24) // Increased spacing for iPad
     }
     
     // MARK: - Computed Properties
@@ -275,7 +276,7 @@ struct PositionSelectionCard: View {
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 80)
+            .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 80) // Taller on iPad
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(isSelected ? SkillBallrColors.skillOrange : SkillBallrColors.overlayBackground)
