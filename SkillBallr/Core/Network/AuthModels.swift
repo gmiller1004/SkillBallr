@@ -55,10 +55,20 @@ struct APIUser: Codable {
 /// Request model for Apple Sign In
 struct AppleSignInRequest: Codable {
     let appleUserId: String
-    let email: String?
-    let firstName: String?
-    let lastName: String?
-    let identityToken: String
+    let email: String
+    let firstName: String
+    let lastName: String
+    let role: String
+    let position: String
+    
+    init(appleUserId: String, email: String, firstName: String, lastName: String, role: String, position: String) {
+        self.appleUserId = appleUserId
+        self.email = email
+        self.firstName = firstName
+        self.lastName = lastName
+        self.role = role
+        self.position = position
+    }
 }
 
 /// Response model for Apple Sign In
@@ -66,6 +76,7 @@ struct AppleSignInResponse: Codable {
     let user: APIUser
     let token: String
     let isNewUser: Bool
+    let provider: String
 }
 
 // MARK: - Error Models

@@ -272,27 +272,8 @@ class AuthenticationManager: ObservableObject {
             // Process the Apple ID credential
             let credential = result.credential as! ASAuthorizationAppleIDCredential
             
-            // Create user profile from Apple ID data
-            let userProfile = UserProfile(
-                id: credential.user, // Apple user ID
-                email: credential.email ?? "user@icloud.com",
-                firstName: credential.fullName?.givenName ?? "Apple",
-                lastName: credential.fullName?.familyName ?? "User",
-                role: .player, // Default role, can be updated later
-                position: .qb // Default position, can be updated later
-            )
-            
-            await MainActor.run {
-                self.currentUser = userProfile
-                self.isAuthenticated = true
-                self.isLoading = false
-            }
-            
-            // TODO: Save user profile to backend and local storage
-            
-            // TODO: Send Apple ID data to your backend for user creation/authentication
-            // You'll need to send the credential.user (Apple user ID) and credential.identityToken
-            // to your backend to create a JWT token
+            // Send Apple ID data to backend for authentication/user creation
+            try await authenticateWithAppleOnServer(credential: credential)
             
             print("✅ Apple Sign In successful for user: \(credential.user)")
             
@@ -347,6 +328,57 @@ class AuthenticationManager: ObservableObject {
                 throw error
             }
         }
+    }
+    
+    /// Authenticate with Apple credentials on the server
+    private func authenticateWithAppleOnServer(credential: ASAuthorizationAppleIDCredential) async throws {
+        
+        // For now, use default role and position since we don't have onboarding data
+        // In the future, this will be passed from the onboarding flow
+        let role = UserRole.player
+        let position = PlayerPosition.qb
+        
+        // Prepare request data
+        let requestData = AppleSignInRequest(
+            appleUserId: credential.user,
+            email: credential.email ?? "user@icloud.com",
+            firstName: credential.fullName?.givenName ?? "Apple",
+            lastName: credential.fullName?.familyName ?? "User",
+            role: role.rawValue.lowercased(),
+            position: position.rawValue
+        )
+        
+        let encoder = JSONEncoder()
+        let requestBody = try encoder.encode(requestData)
+        
+        // Make API call to Apple Sign In endpoint
+        let response: AppleSignInResponse = try await networkManager.request(
+            endpoint: .appleSignIn,
+            responseType: AppleSignInResponse.self,
+            method: .POST,
+            body: requestBody
+        )
+        
+        // Store JWT token
+        networkManager.setJWTToken(response.token)
+        
+        // Convert API user to local UserProfile
+        let userProfile = UserProfile(
+            id: response.user.id,
+            email: response.user.email,
+            firstName: response.user.firstName,
+            lastName: response.user.lastName,
+            role: UserRole(rawValue: response.user.role.capitalized) ?? role,
+            position: response.user.position.flatMap { PlayerPosition(rawValue: $0) }
+        )
+        
+        await MainActor.run {
+            self.currentUser = userProfile
+            self.isAuthenticated = true
+            self.isLoading = false
+        }
+        
+        print("✅ Apple Sign In API success - isNewUser: \(response.isNewUser), provider: \(response.provider)")
     }
     
     /// Sign out the current user
