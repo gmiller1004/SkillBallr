@@ -67,9 +67,10 @@ struct OnboardingView: View {
             if isAuthenticated {
                 // User has been authenticated, complete onboarding
                 onboardingState.completeOnboarding()
+                appState.completeOnboarding() // Mark that user has completed onboarding
                 
                 // Update app state
-                appState.currentUserProfile = authManager.currentUser
+                appState.setCurrentUser(authManager.currentUser!)
             }
         }
     }

@@ -13,7 +13,12 @@ struct RootView: View {
             } else if !appState.isInitialized {
                 SkillBallrLoadingView()
             } else if !authManager.isAuthenticated {
-                PasswordlessAuthenticationView()
+                // Show onboarding for new users, sign-in for returning users
+                if appState.hasCompletedOnboarding {
+                    PasswordlessAuthenticationView()
+                } else {
+                    OnboardingView()
+                }
             } else if appState.shouldShowOnboarding {
                 OnboardingView()
             } else {

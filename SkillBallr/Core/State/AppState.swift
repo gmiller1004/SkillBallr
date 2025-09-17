@@ -84,12 +84,11 @@ class AppState: ObservableObject {
     
     func signOut() {
         currentUser = nil
-        hasCompletedOnboarding = false
         selectedTab = .player
         
-        // Clear user defaults
+        // Clear user defaults (but keep onboarding completion status)
         userDefaults.removeObject(forKey: AppConfiguration.UserDefaultsKey.userProfile.rawValue)
-        userDefaults.removeObject(forKey: AppConfiguration.UserDefaultsKey.hasCompletedOnboarding.rawValue)
+        // Note: We keep hasCompletedOnboarding so returning users see sign-in screen
         
         // TODO: Clear Core Data cache
         // TODO: Sign out from Firebase
