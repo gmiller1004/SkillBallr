@@ -409,7 +409,8 @@ struct AppleSignInButton: View {
                     do {
                         try await authManager.signInWithApple(
                             role: onboardingData?.role ?? .player,
-                            position: onboardingData?.position ?? .qb
+                            position: onboardingData?.position ?? .qb,
+                            age: onboardingData?.age
                         )
                         print("✅ Apple Sign In completed successfully for user: \(appleIDCredential.user)")
                     } catch {

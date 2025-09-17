@@ -101,7 +101,8 @@ class AuthenticationManager: ObservableObject {
                 role: role.rawValue.lowercased(),
                 position: position?.rawValue ?? "", // Provide empty string instead of nil for coaches
                 firstName: firstName,
-                lastName: lastName
+                lastName: lastName,
+                age: age // Send age for players
             )
             
             let encoder = JSONEncoder()
@@ -124,7 +125,7 @@ class AuthenticationManager: ObservableObject {
                 lastName: response.user.lastName,
                 role: UserRole(rawValue: response.user.role.capitalized) ?? role,
                 position: response.user.position.flatMap { PlayerPosition(rawValue: $0) },
-                age: age
+                age: response.user.age ?? age // Use age from API response, fallback to passed age
             )
             
             await MainActor.run {
@@ -236,7 +237,7 @@ class AuthenticationManager: ObservableObject {
     }
     
     /// Sign in with Apple ID
-    func signInWithApple(role: UserRole = .player, position: PlayerPosition? = nil) async throws {
+    func signInWithApple(role: UserRole = .player, position: PlayerPosition? = nil, age: Int? = nil) async throws {
         isLoading = true
         errorMessage = nil
         
@@ -273,7 +274,7 @@ class AuthenticationManager: ObservableObject {
             let credential = result.credential as! ASAuthorizationAppleIDCredential
             
             // Send Apple ID data to backend for authentication/user creation
-            try await authenticateWithAppleOnServer(credential: credential, role: role, position: position)
+            try await authenticateWithAppleOnServer(credential: credential, role: role, position: position, age: age)
             
             print("✅ Apple Sign In successful for user: \(credential.user)")
             
@@ -331,7 +332,7 @@ class AuthenticationManager: ObservableObject {
     }
     
     /// Authenticate with Apple credentials on the server
-    private func authenticateWithAppleOnServer(credential: ASAuthorizationAppleIDCredential, role: UserRole, position: PlayerPosition?) async throws {
+    private func authenticateWithAppleOnServer(credential: ASAuthorizationAppleIDCredential, role: UserRole, position: PlayerPosition?, age: Int?) async throws {
         
         // Prepare request data
         let requestData = AppleSignInRequest(
@@ -340,7 +341,8 @@ class AuthenticationManager: ObservableObject {
             firstName: credential.fullName?.givenName ?? "Apple",
             lastName: credential.fullName?.familyName ?? "User",
             role: role.rawValue.lowercased(),
-            position: position?.rawValue ?? ""
+            position: position?.rawValue ?? "",
+            age: age // Send age for players
         )
         
         let encoder = JSONEncoder()
@@ -364,7 +366,8 @@ class AuthenticationManager: ObservableObject {
             firstName: response.user.firstName,
             lastName: response.user.lastName,
             role: UserRole(rawValue: response.user.role.capitalized) ?? role,
-            position: response.user.position.flatMap { PlayerPosition(rawValue: $0) }
+            position: response.user.position.flatMap { PlayerPosition(rawValue: $0) },
+            age: response.user.age ?? age // Use age from API response, fallback to passed age
         )
         
         await MainActor.run {

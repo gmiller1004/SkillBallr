@@ -21,14 +21,16 @@ struct EmailAuthRequest: Codable {
     let position: String?
     let firstName: String?
     let lastName: String?
+    let age: Int?
     
-    init(email: String, code: String, role: String? = nil, position: String? = nil, firstName: String? = nil, lastName: String? = nil) {
+    init(email: String, code: String, role: String? = nil, position: String? = nil, firstName: String? = nil, lastName: String? = nil, age: Int? = nil) {
         self.email = email
         self.code = code
         self.role = role
         self.position = position
         self.firstName = firstName
         self.lastName = lastName
+        self.age = age
     }
 }
 
@@ -47,6 +49,7 @@ struct APIUser: Codable {
     let position: String?
     let firstName: String
     let lastName: String
+    let age: Int?
     let createdAt: String
 }
 
@@ -60,14 +63,16 @@ struct AppleSignInRequest: Codable {
     let lastName: String
     let role: String
     let position: String
+    let age: Int?
     
-    init(appleUserId: String, email: String, firstName: String, lastName: String, role: String, position: String) {
+    init(appleUserId: String, email: String, firstName: String, lastName: String, role: String, position: String, age: Int? = nil) {
         self.appleUserId = appleUserId
         self.email = email
         self.firstName = firstName
         self.lastName = lastName
         self.role = role
         self.position = position
+        self.age = age
     }
 }
 
