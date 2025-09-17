@@ -236,7 +236,7 @@ class AuthenticationManager: ObservableObject {
     }
     
     /// Sign in with Apple ID
-    func signInWithApple() async throws {
+    func signInWithApple(role: UserRole = .player, position: PlayerPosition? = nil) async throws {
         isLoading = true
         errorMessage = nil
         
@@ -273,7 +273,7 @@ class AuthenticationManager: ObservableObject {
             let credential = result.credential as! ASAuthorizationAppleIDCredential
             
             // Send Apple ID data to backend for authentication/user creation
-            try await authenticateWithAppleOnServer(credential: credential)
+            try await authenticateWithAppleOnServer(credential: credential, role: role, position: position)
             
             print("✅ Apple Sign In successful for user: \(credential.user)")
             
@@ -331,12 +331,7 @@ class AuthenticationManager: ObservableObject {
     }
     
     /// Authenticate with Apple credentials on the server
-    private func authenticateWithAppleOnServer(credential: ASAuthorizationAppleIDCredential) async throws {
-        
-        // For now, use default role and position since we don't have onboarding data
-        // In the future, this will be passed from the onboarding flow
-        let role = UserRole.player
-        let position = PlayerPosition.qb
+    private func authenticateWithAppleOnServer(credential: ASAuthorizationAppleIDCredential, role: UserRole, position: PlayerPosition?) async throws {
         
         // Prepare request data
         let requestData = AppleSignInRequest(
@@ -345,7 +340,7 @@ class AuthenticationManager: ObservableObject {
             firstName: credential.fullName?.givenName ?? "Apple",
             lastName: credential.fullName?.familyName ?? "User",
             role: role.rawValue.lowercased(),
-            position: position.rawValue
+            position: position?.rawValue ?? ""
         )
         
         let encoder = JSONEncoder()

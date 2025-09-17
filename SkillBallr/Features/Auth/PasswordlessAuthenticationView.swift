@@ -385,6 +385,7 @@ struct AppleSignInButton: View {
         )
         .signInWithAppleButtonStyle(.black) // Use black style for dark background
         .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 60 : 50) // iPad-optimized height
+        .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 400 : .infinity) // Constrain width on iPad
         .cornerRadius(UIDevice.current.userInterfaceIdiom == .pad ? 20 : 16) // iPad-optimized corner radius
         .disabled(isLoading)
         .opacity(isLoading ? 0.6 : 1.0)
@@ -403,23 +404,22 @@ struct AppleSignInButton: View {
                     return
                 }
                 
-                // Create user profile from Apple ID data and onboarding data
-                let userProfile = UserProfile(
-                    id: appleIDCredential.user, // Apple user ID
-                    email: appleIDCredential.email ?? "user@icloud.com",
-                    firstName: appleIDCredential.fullName?.givenName ?? "Apple",
-                    lastName: appleIDCredential.fullName?.familyName ?? "User",
-                    role: onboardingData?.role ?? .player, // Use onboarding role or default
-                    position: onboardingData?.position ?? .qb // Use onboarding position or default
-                )
-                
-                // Set authentication state
-                authManager.currentUser = userProfile
-                authManager.isAuthenticated = true
-                authManager.isLoading = false
-                authManager.errorMessage = nil
-                
-                print("✅ Apple Sign In completed successfully for user: \(appleIDCredential.user)")
+                // Call the proper Apple Sign In API method
+                Task {
+                    do {
+                        try await authManager.signInWithApple(
+                            role: onboardingData?.role ?? .player,
+                            position: onboardingData?.position ?? .qb
+                        )
+                        print("✅ Apple Sign In completed successfully for user: \(appleIDCredential.user)")
+                    } catch {
+                        print("❌ Apple Sign In API failed: \(error)")
+                        await MainActor.run {
+                            authManager.errorMessage = "Failed to sign in with Apple. Please try again."
+                            authManager.isLoading = false
+                        }
+                    }
+                }
                 
             case .failure(let error):
                 print("❌ Apple Sign In failed: \(error)")
